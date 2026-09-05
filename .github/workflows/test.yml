@@ -49,6 +49,14 @@ jobs:
     runs-on: ubuntu-latest
     container: ghcr.io/pathofbuildingcommunity/pathofbuilding-tests:latest
     steps:
+      # The upstream test image is alpine-minirootfs 3.18 and ships no bash.
+      # Upstream's own steps survive that because GitHub's default shell falls
+      # back to sh, but action-checkout's "Detect LFS" step hardcodes
+      # `shell: bash` and dies with exit 127. Same reason upstream already
+      # `apk add git` in check_modcache: install a tool an action needs. No
+      # build or test command is affected.
+      - name: Install bash dependency
+        run: apk add --no-cache bash
       - name: Checkout
         uses: crashappsec/action-checkout@main
         with:
@@ -79,6 +87,10 @@ jobs:
     steps:
       - name: Install git dependency
         run: apk add git
+      # See run_tests: action-checkout's Detect LFS step needs bash, which the
+      # alpine test image lacks.
+      - name: Install bash dependency
+        run: apk add --no-cache bash
       - name: Checkout
         uses: crashappsec/action-checkout@main
         with:
